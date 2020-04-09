@@ -4,17 +4,20 @@
   apt:
     name:
       - prometheus-postgres-exporter
-      - acl # for become_user
-      - python-psycopg2
+      - acl              # for become_user
+      - python-psycopg2  # for postgresql_query
 
-- name: Ensure prometheus_postgres_exporter user exists
+- name: Ensure prometheus user exists
   become: True
   user:
-    name: prometheus_postgres_exporter
-    shell: /bin/false
-    home: /var/lib/prometheus_postgres_exporter
+    name: prometheus
     system: yes
-  register: prometheus_postgres_exporter_user
+
+- name: Ensure postgresql user exists
+  postgresql_user:
+    db: postgres
+    name: prometheus
+  register: prometheus_postgres_exporter_db_user
 
 - name: Copy the initialization script
   become: True
@@ -24,7 +27,7 @@
     owner: postgres
     group: postgres
     mode: 0400
-  when: prometheus_postgres_exporter_user is changed
+  when: prometheus_postgres_exporter_db_user is changed
 
 - name: Run the initialization script
   become: True
@@ -32,7 +35,7 @@
   postgresql_query:
     db: "postgres"
     path_to_script: /tmp/setup-user.sql
-  when: prometheus_postgres_exporter_user is changed
+  when: prometheus_postgres_exporter_db_user is changed
 
 - name: Configure prometheus-postgres-exporter
   become: True
