@@ -21,8 +21,8 @@
   template:
     src: setup-user.sql.j2
     dest: /tmp/setup-user.sql
-    owner: prometheus_postgres_exporter
-    group: prometheus_postgres_exporter
+    owner: postgres
+    group: postgres
     mode: 0400
   when: prometheus_postgres_exporter_user is changed
 
