@@ -17,6 +17,7 @@
   register: prometheus_postgres_exporter_user
 
 - name: Copy the initialization script
+  become: True
   template:
     src: setup-user.sql.j2
     dest: /tmp/setup-user.sql
