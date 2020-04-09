@@ -1,0 +1,48 @@
+---
+- name: Install prometheus postgres exporter
+  become: True
+  apt:
+    name:
+      - prometheus-postgres-exporter
+      - acl # for become_user
+      - python-psycopg2
+
+- name: Ensure prometheus_postgres_exporter user exists
+  become: True
+  user:
+    name: prometheus_postgres_exporter
+    shell: /bin/false
+    home: /var/lib/prometheus_postgres_exporter
+    system: yes
+  register: prometheus_postgres_exporter_user
+
+- name: Copy the initialization script
+  copy:
+    src: setup-user.sql.j2
+    dest: /tmp/setup-user.sql
+    owner: prometheus_postgres_exporter
+    group: prometheus_postgres_exporter
+    mode: 0400
+  when: prometheus_postgres_exporter_user is changed
+
+- name: Run the initialization script
+  become: True
+  become_user: postgres
+  postgresql_query:
+    db: "postgres"
+    path_to_script: /tmp/setup-user.sql
+  when: prometheus_postgres_exporter_user is changed
+
+- name: Configure prometheus-postgres-exporter
+  become: True
+  template:
+    src: prometheus-postgres-exporter.j2
+    dest: /etc/default/prometheus-postgres-exporter
+  notify: restart prometheus-postgres-exporter
+
+- name: Configure haproxy
+  become: True
+  template:
+    src: haproxy.conf.j2
+    dest: /etc/haproxy/conf.d/51-prometheus-postgres-exporter.conf
+  notify: restart haproxy

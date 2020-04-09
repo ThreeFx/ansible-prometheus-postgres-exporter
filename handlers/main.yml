@@ -1,0 +1,14 @@
+---
+- name: restart prometheus-postgres-exporter
+  become: True
+  systemd:
+    name: prometheus-postgres-exporter
+    state: restarted
+    enabled: yes
+
+- name: restart haproxy
+  become: True
+  systemd:
+    name: haproxy
+    state: restarted
+    enabled: yes
