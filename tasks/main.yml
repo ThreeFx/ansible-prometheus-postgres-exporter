@@ -14,6 +14,8 @@
     system: yes
 
 - name: Ensure postgresql user exists
+  become: True
+  become_user: postgres
   postgresql_user:
     db: postgres
     name: prometheus
